@@ -296,7 +296,7 @@ function buildLibrary(R, q) {
   const lw = woodMat([56, 28, 14], [1, 1], { roughness: 0.45 }); cyl(0.3, 0.38, 0.08, lw, 0, 0.04, 0, lec, 12); cyl(0.07, 0.09, 1.05, lw, 0, 0.56, 0, lec, 10);
   const top = new THREE.Group(); top.position.set(0, 1.12, 0); top.rotation.x = 0.45; lec.add(top); box(0.8, 0.05, 0.55, lw, 0, 0, 0, top);
   const bookT = new THREE.Mesh(new THREE.PlaneGeometry(0.76, 0.48), clueMat()); bookT.rotation.x = -Math.PI / 2; bookT.position.y = 0.035; top.add(bookT); R.bookPage = bookT;
-  const lc = P.makeCandle(R, 0.18, 0.03, true, { wax: 0x8a7a62, gs: 0.6 }); lc.g.position.set(0.46, 0.03, -0.3); // off the page so it never glares over the clue top.add(lc.g);
+  const lc = P.makeCandle(R, 0.18, 0.03, true, { wax: 0x8a7a62, gs: 0.6 }); lc.g.position.set(0.46, 0.03, -0.3); top.add(lc.g); // off the page so it never glares over the clue
   register(R, 'lectern', lec); R.spots.lectern = { pos: V3(3.18, 2.02, -1.2), look: V3(3.4, 1.15, -1.61) };
   pointLight(R, 0xffa050, 3.5, 4, 3.3, 1.8, -1.4, 0.25);
   // twitching red book (hides the moon crystal) on the right shelf
