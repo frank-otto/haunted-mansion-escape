@@ -8,6 +8,8 @@ import { makePumpkin, makeFaceMaterial } from './pumpkins.js';
 const { box, cyl, mesh, std, gold, iron, woodMat, sprite } = P;
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 
+// clue pages (book, recipe, sheet music): unlit so candle light + bloom can never wash out the solution; kept below the bloom threshold
+function clueMat() { return new THREE.MeshBasicMaterial({ color: 0xb8b0a4 }); }
 function newRoom(name, offset, o = {}) {
   const group = new THREE.Group(); group.position.copy(offset); group.visible = false;
   return { name, group, offset, items: {}, hits: [], candles: [], windows: [], curtains: [], rays: [], drifters: [], fog: [], lights: [], anim: [], spots: {}, kids: o.kids,
@@ -283,7 +285,7 @@ function buildLibrary(R, q) {
     const x = -1.4 + i * 0.7; const hg = new THREE.Group(); hg.position.set(x, 1.64, 0.2); fp.add(hg);
     cyl(0.07, 0.09, 0.04, gold(), 0, 0.02, 0, hg, 12); cyl(0.02, 0.03, 0.14, gold(), 0, 0.09, 0, hg, 8); cyl(0.05, 0.035, 0.05, gold(), 0, 0.18, 0, hg, 10);
     const plaque = mesh(new THREE.CircleGeometry(0.11, 24), std(0xffffff, { map: TX.symbolPlaque(SY[i]), metalness: 0.6, roughness: 0.35, envMap: P.ENV.map }), x, 1.43, 0.51, fp);
-    const c = P.makeCandle(R, 0.34 - Math.abs(i - 2) * 0.03, 0.035, false, { gs: 1.2 }); c.g.position.set(0, 0.2, 0); hg.add(c.g);
+    const c = P.makeCandle(R, 0.34 - Math.abs(i - 2) * 0.03, 0.035, false, { gs: 1.2, wax: new THREE.Color(TX.SYM_COLS[SY[i]]).lerp(new THREE.Color(0xf0e2c4), 0.25).getHex() }); c.g.position.set(0, 0.2, 0); hg.add(c.g);
     if (i === 3) c.g.visible = false;
     register(R, 'holder' + i, hg); hitbox(R, 'holder' + i, 0.3, 0.6, 0.3, 0, 0.3, 0, hg);
     R.holders.push({ g: hg, c, sym: SY[i] });
@@ -292,10 +294,10 @@ function buildLibrary(R, q) {
   // lectern with the book of flames
   const lec = new THREE.Group(); lec.position.set(3.4, 0, -1.6); lec.rotation.y = -0.5; g.add(lec);
   const lw = woodMat([56, 28, 14], [1, 1], { roughness: 0.45 }); cyl(0.3, 0.38, 0.08, lw, 0, 0.04, 0, lec, 12); cyl(0.07, 0.09, 1.05, lw, 0, 0.56, 0, lec, 10);
-  const top = new THREE.Group(); top.position.set(0, 1.12, 0); top.rotation.x = -0.45; lec.add(top); box(0.8, 0.05, 0.55, lw, 0, 0, 0, top);
-  const bookT = new THREE.Mesh(new THREE.PlaneGeometry(0.76, 0.48), std(0xffffff, { roughness: 0.8, emissive: 0xffffff, emissiveIntensity: 0.06 })); bookT.rotation.x = -Math.PI / 2; bookT.position.y = 0.035; top.add(bookT); R.bookPage = bookT;
-  const lc = P.makeCandle(R, 0.18, 0.03, true); lc.g.position.set(0.32, 0.03, -0.2); top.add(lc.g);
-  register(R, 'lectern', lec); R.spots.lectern = { pos: V3(2.5, 2.0, -0.4), look: V3(3.4, 1.1, -1.6) };
+  const top = new THREE.Group(); top.position.set(0, 1.12, 0); top.rotation.x = 0.45; lec.add(top); box(0.8, 0.05, 0.55, lw, 0, 0, 0, top);
+  const bookT = new THREE.Mesh(new THREE.PlaneGeometry(0.76, 0.48), clueMat()); bookT.rotation.x = -Math.PI / 2; bookT.position.y = 0.035; top.add(bookT); R.bookPage = bookT;
+  const lc = P.makeCandle(R, 0.18, 0.03, true, { wax: 0x8a7a62, gs: 0.6 }); lc.g.position.set(0.46, 0.03, -0.3); // off the page so it never glares over the clue top.add(lc.g);
+  register(R, 'lectern', lec); R.spots.lectern = { pos: V3(3.18, 2.02, -1.2), look: V3(3.4, 1.15, -1.61) };
   pointLight(R, 0xffa050, 3.5, 4, 3.3, 1.8, -1.4, 0.25);
   // twitching red book (hides the moon crystal) on the right shelf
   const tb = new THREE.Group(); tb.position.set(7.3, 2.0, -2.8); tb.rotation.y = -Math.PI / 2; g.add(tb);
@@ -427,7 +429,7 @@ function buildKitchen(R, q) {
   box(0.5, 0.1, 0.36, std(0x3a1a10, { roughness: 0.7 }), 3.6, 1.0, -1.5, g);
   // recipe parchment on the right wall
   const rec = new THREE.Group(); rec.position.set(6.95, 2.2, -4.0); rec.rotation.y = -Math.PI / 2; g.add(rec);
-  const recM = mesh(new THREE.PlaneGeometry(1.0, 1.4), std(0xffffff, { roughness: 0.85, emissive: 0xffffff, emissiveIntensity: 0.05 }), 0, 0, 0.02, rec); R.recipePage = recM;
+  const recM = mesh(new THREE.PlaneGeometry(1.0, 1.4), clueMat(), 0, 0, 0.02, rec); R.recipePage = recM;
   mesh(new THREE.SphereGeometry(0.03, 8, 6), iron(), 0, 0.62, 0.05, rec);
   register(R, 'recipe', rec); R.spots.recipe = { pos: V3(4.9, 2.2, -4.0), look: V3(7.0, 2.2, -4.0) };
   pointLight(R, 0xffa040, 3, 4, 6.0, 3.0, -4.0, 0.2);
@@ -504,7 +506,7 @@ function buildAttic(R, q) {
   // sheet music on an easel
   const es = new THREE.Group(); es.position.set(-2.7, 0, -3.4); es.rotation.y = 0.55; g.add(es); for (const sd of [-1, 1]) { const l = box(0.05, 2.0, 0.05, woodMat([60, 36, 20]), sd * 0.45, 1.0, 0, es); l.rotation.z = -sd * 0.08; } const l3 = box(0.05, 2.0, 0.05, woodMat([60, 36, 20]), 0, 1.0, -0.4, es); l3.rotation.x = 0.25;
   box(1.0, 0.05, 0.12, woodMat([60, 36, 20]), 0, 1.0, 0.04, es);
-  const sheet = mesh(new THREE.PlaneGeometry(1.0, 0.62), std(0xffffff, { roughness: 0.85, emissive: 0xffffff, emissiveIntensity: 0.07 }), 0, 1.36, 0.03, es); sheet.rotation.x = -0.08; R.sheetPage = sheet;
+  const sheet = mesh(new THREE.PlaneGeometry(1.0, 0.62), clueMat(), 0, 1.36, 0.03, es); sheet.rotation.x = -0.08; R.sheetPage = sheet;
   register(R, 'sheet', es); R.spots.sheet = { pos: V3(-2.0, 1.55, -2.3), look: V3(-2.75, 1.35, -3.45) };
   pointLight(R, 0xffb060, 2.5, 3, -2.3, 2.1, -2.8, 0.2);
   // covered furniture, rocking chair, dress form, crates, mirror

@@ -147,9 +147,9 @@ function refreshClueTextures() {
   if (!rooms) return;
   const L = getLang();
   const seq = variant('candles').map(i => TX.SYMBOLS[i]);
-  const lib = rooms.library; lib.bookPage.material.map = TX.flameBook(seq, T('bookT', null, L)); lib.bookPage.material.emissiveMap = lib.bookPage.material.map; lib.bookPage.material.needsUpdate = true;
-  const k = rooms.kitchen; k.recipePage.material.map = TX.recipeSheet(variant('brew').map(i => BOTTLE_COLS[i]), T('recipeT', null, L), T('crystalT', null, L)); k.recipePage.material.emissiveMap = k.recipePage.material.map; k.recipePage.material.needsUpdate = true;
-  const a = rooms.attic; a.sheetPage.material.map = TX.sheetMusic(variant('melody').map(i => [NOTE_COLS[i], PUZ.pitch[i]]), T('sheetT', null, L)); a.sheetPage.material.emissiveMap = a.sheetPage.material.map; a.sheetPage.material.needsUpdate = true;
+  const lib = rooms.library; lib.bookPage.material.map = TX.flameBook(seq, T('bookT', null, L)); lib.bookPage.material.needsUpdate = true;
+  const k = rooms.kitchen; k.recipePage.material.map = TX.recipeSheet(variant('brew').map(i => BOTTLE_COLS[i]), T('recipeT', null, L), T('crystalT', null, L)); k.recipePage.material.needsUpdate = true;
+  const a = rooms.attic; a.sheetPage.material.map = TX.sheetMusic(variant('melody').map(i => [NOTE_COLS[i], PUZ.pitch[i]]), T('sheetT', null, L)); a.sheetPage.material.needsUpdate = true;
 }
 function setRoom(name, snap = false) {
   S.room = name; R = rooms[name];
@@ -549,6 +549,29 @@ function updateLightning(dt) {
   if (R.hemi) R.hemi.intensity = (R.hemi.userData.base ?? (R.hemi.userData.base = R.hemi.intensity)) * (1 + v * 0.8);
 }
 
+// ---------------- examine focus: no glare on close-ups ----------------
+// While a close-up is open, bloom + exposure ease down and glows / lights / light shafts near the examined object are dimmed,
+// so paper, ink and colours stay readable. Values are restored every frame before the regular animation writes them.
+const FOCUS = { f: 0, saved: [], cache: new WeakMap() };
+function focusRestore() { for (const [o, k, v] of FOCUS.saved) o[k] = v; FOCUS.saved.length = 0; }
+function focusScale(o, k, m) { FOCUS.saved.push([o, k, o[k]]); o[k] *= m; }
+function focusApply(dt) {
+  const want = S.spot && R.spots[S.spot] && !cineCam ? 1 : 0;
+  FOCUS.f += (want - FOCUS.f) * Math.min(1, dt * 5); if (FOCUS.f < 0.002) FOCUS.f = 0;
+  const f = FOCUS.f;
+  if (bloom) bloom.strength = 0.68 * QUALITY[qName()].bloom * (1 - 0.8 * f);
+  renderer.toneMappingExposure = R.exposure * (1 - 0.14 * f);
+  if (!f) return;
+  let c = FOCUS.cache.get(R); if (!c) { c = { sprites: [], lights: [] }; R.group.traverse(o => { if (o.isSprite) c.sprites.push(o); else if (o.isPointLight || o.isSpotLight) c.lights.push(o); }); FOCUS.cache.set(R, c); }
+  const sp = R.spots[S.spot] || R.spots[Object.keys(R.spots)[0]]; const tgt = V2.copy(sp.look).add(R.offset), W = new THREE.Vector3();
+  const near = (o, r0, r1) => { o.getWorldPosition(W); return f * clamp(1 - (W.distanceTo(tgt) - r0) / (r1 - r0), 0, 1); };
+  for (const o of c.sprites) { if (!o.visible) continue; const k = near(o, 0.9, 3.2); if (k > 0) focusScale(o.material, 'opacity', 1 - 0.85 * k); }
+  for (const l of c.lights) { const k = near(l, 1.2, 4.0); if (k > 0) focusScale(l, 'intensity', 1 - 0.6 * k); }
+  for (const r of R.rays) focusScale(r.m, 'opacity', 1 - 0.8 * f);
+  for (const fg of R.fog) if (fg.p.material && fg.p.material.opacity !== undefined) focusScale(fg.p.material, 'opacity', 1 - 0.6 * f);
+  if (R.dust && f > 0.5) { FOCUS.saved.push([R.dust, 'visible', R.dust.visible]); R.dust.visible = false; }
+}
+
 // ---------------- ambient animation ----------------
 function animate(dt) {
   const t = S.clock;
@@ -898,7 +921,7 @@ function step(dt) {
   if (S.mode === 'play' && !S.paused && !S.tut && !S.f.escaped) { S.time += dt; if ((S._ht = (S._ht || 0) + dt) > 0.5) { S._ht = 0; updateHud(); } if ((S._st = (S._st || 0) + dt) > 5) { S._st = 0; save(); } }
   if (S.mode === 'menu') { cam.yaw = Math.sin(S.clock * 0.12) * 0.42; cam.pitch = 0.04 + Math.sin(S.clock * 0.09) * 0.05; }
   if ((S._nt = (S._nt || 0) + dt) > 0.2) { S._nt = 0; renderNav(); }
-  updateTweens(dt); updateLightning(dt); animate(dt); walkStep(dt); updateCamera(dt); updateFlyby(dt);
+  focusRestore(); updateTweens(dt); updateLightning(dt); animate(dt); walkStep(dt); updateCamera(dt); updateFlyby(dt); focusApply(dt);
   if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('msg').classList.remove('show'); }
   if (wispT > 0) { wispT -= dt; } $('wisp').classList.toggle('on', wispT > 0);
 }

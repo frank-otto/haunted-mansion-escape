@@ -209,11 +209,19 @@ const SYM = {
   spider: (g, s) => { g.beginPath(); g.ellipse(0, s * 0.15, s * 0.42, s * 0.5, 0, 0, TAU); g.fill(); g.beginPath(); g.arc(0, -s * 0.45, s * 0.25, 0, TAU); g.fill(); g.lineWidth = s * 0.1; g.strokeStyle = g.fillStyle; for (const d of [-1, 1]) for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(0, 0); g.lineTo(d * s * 0.9, -s * 0.5 + i * s * 0.35); g.lineTo(d * s * 1.15, -s * 0.2 + i * s * 0.4); g.stroke(); } }
 };
 export const SYMBOLS = ['moon', 'pumpkin', 'bat', 'skull', 'spider'];
+// each symbol has its own colour: plaque disc on the mantel, holder candle wax and the icon in the book all match
+export const SYM_COLS = { moon: '#3f74d8', pumpkin: '#e8741a', bat: '#8a44c8', skull: '#2f9a48', spider: '#cc2a2a' };
+function candleIcon(g, x, y, s, col) {
+  g.fillStyle = col; g.strokeStyle = '#1e0e04'; g.lineWidth = 4; g.fillRect(x - s * 0.32, y - s * 0.6, s * 0.64, s * 1.5); g.strokeRect(x - s * 0.32, y - s * 0.6, s * 0.64, s * 1.5);
+  g.fillStyle = '#1e0e04'; g.fillRect(x - 2, y - s * 0.85, 4, s * 0.27);
+  g.fillStyle = '#e8820e'; g.beginPath(); g.moveTo(x, y - s * 1.55); g.bezierCurveTo(x + s * 0.32, y - s * 1.1, x + s * 0.22, y - s * 0.85, x, y - s * 0.8); g.bezierCurveTo(x - s * 0.22, y - s * 0.85, x - s * 0.32, y - s * 1.1, x, y - s * 1.55); g.fill(); g.stroke();
+  g.fillStyle = '#5a3010'; g.fillRect(x - s * 0.5, y + s * 0.9, s, s * 0.14);
+}
 export function drawSymbol(g, name, x, y, s, color) { g.save(); g.translate(x, y); g.fillStyle = color; SYM[name](g, s); g.restore(); }
 export function symbolPlaque(name) {
   return once('sp' + name, () => {
     const [c, g] = cnv(128, 128); const gr = g.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, '#e0b060'); gr.addColorStop(0.5, '#a0702a'); gr.addColorStop(1, '#5a3a10'); g.fillStyle = gr; g.beginPath(); g.arc(64, 64, 60, 0, TAU); g.fill();
-    g.strokeStyle = '#3a2008'; g.lineWidth = 5; g.stroke(); drawSymbol(g, name, 64, 66, 30, '#2a1404'); return toTex(c);
+    g.strokeStyle = '#3a2008'; g.lineWidth = 5; g.stroke(); g.fillStyle = SYM_COLS[name]; g.beginPath(); g.arc(64, 64, 46, 0, TAU); g.fill(); g.lineWidth = 3; g.stroke(); drawSymbol(g, name, 64, 66, 28, '#140a02'); return toTex(c);
   });
 }
 function parchment(g, w, h) {
@@ -227,14 +235,16 @@ const SERIF = 'Georgia, "Times New Roman", serif';
 export function flameBook(seq, title) {
   const [c, g] = cnv(1024, 640); parchment(g, 1024, 640);
   g.fillStyle = 'rgba(60,30,10,0.35)'; g.fillRect(508, 0, 8, 640);
-  ink(g, `italic 700 40px ${SERIF}`, title[0], 256, 70); ink(g, `italic 30px ${SERIF}`, title[1], 256, 120, '#5a3010');
-  for (let i = 0; i < 6; i++) { g.strokeStyle = 'rgba(60,30,10,0.25)'; g.lineWidth = 2; g.beginPath(); g.moveTo(60, 190 + i * 70); g.lineTo(460, 190 + i * 70); g.stroke(); }
-  // flame drawing
-  g.fillStyle = '#7a2a08'; g.beginPath(); g.moveTo(256, 230); g.bezierCurveTo(320, 330, 300, 430, 256, 470); g.bezierCurveTo(212, 430, 192, 330, 256, 230); g.fill();
-  g.fillStyle = '#c86a10'; g.beginPath(); g.moveTo(256, 300); g.bezierCurveTo(290, 360, 280, 420, 256, 445); g.bezierCurveTo(232, 420, 222, 360, 256, 300); g.fill();
-  g.fillStyle = '#3a1c08'; g.fillRect(232, 470, 48, 110);
-  const n = seq.length, step = 440 / n;
-  seq.forEach((s, i) => { const y = 90 + i * (520 / n) + 40; ink(g, `700 44px ${SERIF}`, ['I', 'II', 'III', 'IV', 'V'][i], 590, y); drawSymbol(g, s, 720, y, 34, '#3a1c08'); if (i < n - 1) ink(g, `40px ${SERIF}`, '↓', 860, y + 260 / n, '#5a3010'); });
+  ink(g, `italic 700 44px ${SERIF}`, title[0], 256, 80, '#1e0e04'); ink(g, `italic 32px ${SERIF}`, title[1], 256, 132, '#3a1c08');
+  // left page: the five holders as a legend (colour disc + symbol, like the plaques on the mantel)
+  SYMBOLS.forEach((s, i) => { const x = 76 + i * 90, y = 300; g.fillStyle = SYM_COLS[s]; g.strokeStyle = '#1e0e04'; g.lineWidth = 4; g.beginPath(); g.arc(x, y, 36, 0, TAU); g.fill(); g.stroke(); drawSymbol(g, s, x, y + 2, 22, '#140a02'); candleIcon(g, x, y + 150, 34, SYM_COLS[s]); });
+  // right page: numbered order, each step = big number, coloured candle, coloured symbol disc
+  const n = seq.length, row = 560 / n;
+  seq.forEach((s, i) => { const y = 60 + i * row + row / 2;
+    ink(g, `700 64px ${SERIF}`, (i + 1) + '.', 600, y + 4, '#1e0e04');
+    candleIcon(g, 715, y + 6, 34, SYM_COLS[s]);
+    g.fillStyle = SYM_COLS[s]; g.strokeStyle = '#1e0e04'; g.lineWidth = 4; g.beginPath(); g.arc(840, y, 42, 0, TAU); g.fill(); g.stroke(); drawSymbol(g, s, 840, y + 2, 26, '#140a02');
+    if (i < n - 1) { g.strokeStyle = 'rgba(60,30,10,0.35)'; g.lineWidth = 2; g.beginPath(); g.moveTo(560, y + row / 2); g.lineTo(960, y + row / 2); g.stroke(); } });
   return toTex(c);
 }
 // recipe on the kitchen wall
