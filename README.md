@@ -2,7 +2,7 @@
 
 A cinematic 3D Halloween escape room in the browser. Explore a candle-lit haunted mansion, solve its puzzles, survive a few scares and free the little ghost Wisp to escape into the moonlit garden.
 
-**Play:** https://frank-otto.github.io/haunted-mansion-escape/
+**Play:** [online version (GitHub Pages)](https://frank-otto.github.io/haunted-mansion-escape/)
 
 ## How to play
 - **Point & click:** click glowing objects, drag to look around, use the arrows to change rooms.
