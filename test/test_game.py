@@ -280,8 +280,10 @@ async def main():
         await ctx.close()
         # ---------- controls: tutorial, navigation, context line, deselect, wrong use ----------
         ctx, pg, logs, _ = await new_page(b, tut=True)
-        await pg.click('#btnPlay'); await sim(pg, 2); tu = await pg.evaluate('__hme.tut()')
-        check('tutorial opens on first start', tu['open'] and tu['step'] == 0 and 'glowing' in tu['title'].lower(), tu)
+        await pg.click('#btnPlay'); await sim(pg, 4); tu = await pg.evaluate('__hme.tut()'); ph = await pg.evaluate('__hme.playHint()')
+        check('one-tap start: no blocking tutorial on first start, short in-play hint instead', not tu['open'] and ph['on'] and len(ph['text']) > 10, (tu, ph))
+        await pg.click('#btnHelp'); tu = await pg.evaluate('__hme.tut()')
+        check('"?" opens the full how-to at step 1', tu['open'] and tu['step'] == 0 and 'glowing' in tu['title'].lower(), tu)
         t0 = (await snap(pg))['time']; await sim(pg, 3); t1 = (await snap(pg))['time']
         check('timer paused while tutorial open', abs(t1 - t0) < 0.01, (t0, t1))
         titles = [tu['title']]

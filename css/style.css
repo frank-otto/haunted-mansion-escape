@@ -208,3 +208,106 @@ body.cine #xh, body.cine #btnAct { opacity: 0; }
 body.walk.touch.playing #btnAct { display: block; }
 body.walk.touch.playing:not(.cine) #invBar { }
 #nav .up { right: 14px; top: 30%; }
+
+/* ---------- ONE-TAP START (2026-10-23): one big glowing PLAY in the thumb zone, options in a sheet, 44 px targets ---------- */
+#toast:not(.show) { visibility: hidden; }
+#hint { position: fixed; left: 50%; top: calc(max(12px, env(safe-area-inset-top)) + 70px); transform: translate(-50%, -8px); width: max-content; max-width: min(92vw, 640px); padding: 10px 18px; border-radius: 18px; background: rgba(20,10,40,0.84); border: 1px solid rgba(255,190,120,0.45); box-shadow: 0 0 26px rgba(255,140,40,0.35); font-weight: 800; font-size: clamp(13px, 1.7vw, 16px); text-align: center; line-height: 1.35; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .35s, transform .35s, visibility 0s .35s; z-index: 8; }
+#hint.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .35s, transform .35s; }
+#start .startCard { gap: 12px; }
+button.big.play { min-width: min(78vw, 340px); min-height: 72px; font-size: clamp(30px, 4.4vw, 44px); padding: 14px 56px; letter-spacing: 0.12em; position: relative; animation: playGlow 1.6s ease-in-out infinite alternate; }
+@keyframes playGlow { from { box-shadow: 0 0 0 2px rgba(255,220,160,0.5) inset, 0 6px 0 #8a2e00, 0 0 26px rgba(255,140,30,0.55); } to { box-shadow: 0 0 0 2px rgba(255,235,190,0.8) inset, 0 6px 0 #8a2e00, 0 0 58px rgba(255,150,40,0.95), 0 0 110px rgba(176,77,255,0.45); } }
+button.big.play:active { animation: none; }
+#btnPlay.mid { min-height: 44px; }
+.startRow { gap: 10px; flex-wrap: nowrap; justify-content: center; }
+.pill, .seg button, button.mid { min-height: 44px; }
+.seg button { min-width: 48px; }
+.icon, #hud .icon { width: 44px; height: 44px; min-width: 44px; }
+#nav button, #btnBack { min-height: 44px; }
+.wheel button { height: 44px; }
+.sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheetHead h2 { text-align: left; font-size: clamp(18px, 3vw, 24px); }
+.xBtn { flex: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,200,140,0.3); font-size: 18px; font-weight: 900; }
+.hdBtns { display: flex; gap: 8px; flex: none; }
+#settings .panel { max-height: calc(100dvh - 16px); overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+#settings .how { font-size: 13px; opacity: 0.85; }
+.fBtns { justify-content: flex-end; }
+#tut .panel { max-height: calc(100dvh - 16px); overflow: auto; }
+body.sheet #start .startCard, body.sheet #start .titleBlock, body.sheet #pauseScr { visibility: hidden; }
+.fKM { flex-wrap: nowrap; justify-content: flex-start; gap: 8px; }
+.fKM .pill { padding: 8px 12px; font-size: 14px; gap: 6px; white-space: nowrap; }
+.vols { flex-wrap: nowrap; gap: 14px; align-items: flex-end; }
+.vols label:not(.pill) { flex: 1; display: flex; flex-direction: column; gap: 0; font-size: 13px; min-width: 0; }
+.vols input[type=range] { width: 100%; min-width: 0; min-height: 44px; accent-color: var(--or); }
+.fSens .pill { flex: none; white-space: nowrap; font-size: 14px; }
+@media (max-width: 640px) {
+  .startCard { padding: 14px 12px 12px; }
+  #settings .panel, #tut .panel { min-width: 0; width: min(96vw, 460px); padding: 14px 14px; gap: 10px; }
+  .seg button { padding: 8px 10px; }
+}
+@media (max-width: 400px) { .fQ > span, .fLang > span { display: none; } .fQ, .fLang { justify-content: center; } .seg button { padding: 8px 7px; font-size: 13px; } .sheetHead h2 { font-size: 17px; } .fKM .pill, .fSens .pill { padding: 8px 9px; font-size: 13px; } }
+@media (max-width: 360px) { #start.screen { padding-left: 8px; padding-right: 8px; } #start .startCard { padding-left: 8px; padding-right: 8px; } .startRow .pill { padding: 8px 10px; font-size: 14px; } }
+@media (max-height: 760px) { #settings .fBtns, #settings .how, #settings .hint { display: none; } }
+@media (max-height: 720px) and (max-aspect-ratio: 4/5) { .tag { display: none; } }
+@media (max-height: 600px) and (max-aspect-ratio: 4/5) { .kicker { display: none; } button.big.play { min-height: 64px; } }
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  .screen { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .titleBlock { margin-top: 0; }
+  .startCard, #start .startCard { padding: 10px 14px; gap: 8px; max-width: 620px; }
+  #start .best { display: none; }
+  button.big.play { min-height: 56px; font-size: 28px; padding: 8px 44px; }
+  #settings .panel { width: min(96vw, 760px); max-width: none; display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; row-gap: 8px; align-items: center; padding: 10px 16px;
+    grid-template-areas: "h h" "km q" "l v" "w s"; }
+  #settings .sheetHead { grid-area: h; } #settings .fKM:not(.fWalk) { grid-area: km; } #settings .fQ { grid-area: q; } #settings .fLang { grid-area: l; } #settings .vols:not(.fSens) { grid-area: v; } #settings .fWalk { grid-area: w; } #settings .fSens { grid-area: s; }
+  .fQ > span, .fLang > span { display: none; }
+  #tut .panel { padding: 10px 16px; gap: 8px; }
+}
+@media (pointer: coarse) { .pill, .seg button, button.mid, .icon { min-height: 44px; } .icon { min-width: 44px; } }
+
+/* ---------- fit pass: the end card fits 375×667, 320×568 and phone landscape without scrolling ---------- */
+.shareHead .seg.small button { min-height: 44px; min-width: 44px; padding: 4px 10px; }
+@media (max-height: 760px) and (max-aspect-ratio: 4/5) {
+  #endCard { padding: 12px 14px; gap: 6px; max-height: calc(100dvh - 12px); overflow: hidden; }
+  .endTitle { font-size: 17px; } #endTime { font-size: 46px; } #endStars { font-size: 24px; letter-spacing: 4px; } #rank { font-size: 18px; } #newBest { font-size: 13px; padding: 3px 12px; }
+  .stats { gap: 6px; } .stats div { padding: 4px 2px; border-radius: 10px; } .stats b { font-size: 16px; } .stats span { font-size: 9px; letter-spacing: 0.06em; }
+  .bestRow { font-size: 14px; } .nameRow input { padding: 8px 10px; width: 170px; min-height: 44px; }
+  .shareBox { padding: 4px 10px; } .shareHead { margin-bottom: 0; } #shareText { display: none; }
+  .btns { gap: 8px; margin-top: 2px; } .btns button.mid { font-size: 14px; padding: 10px 14px; } .btns button.big { font-size: 22px; padding: 10px 34px; }
+}
+@media (max-height: 600px) and (max-aspect-ratio: 4/5) { #endStars { display: none; } #endTime { font-size: 40px; } .btns button.mid { padding: 10px 10px; font-size: 13px; } }
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  #endCard { width: min(96vw, 780px); max-height: calc(100dvh - 10px); overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 4px; padding: 10px 16px; align-items: center; }
+  #endCard > * { grid-column: 1; } #endCard > .nameRow, #endCard > .shareBox, #endCard > .btns { grid-column: 2; }
+  #endCard > .nameRow { grid-row: 1 / 3; } #endCard > .shareBox { grid-row: 3 / 4; } #endCard > .btns { grid-row: 4 / 8; }
+  .endTitle { font-size: 15px; } #endTime { font-size: 38px; } #endStars { font-size: 20px; } #rank { font-size: 16px; } #newBest { font-size: 12px; padding: 2px 10px; }
+  .stats { gap: 4px; } .stats div { padding: 3px 2px; } .stats b { font-size: 14px; } .stats span { font-size: 9px; letter-spacing: 0.04em; } .bestRow { font-size: 13px; }
+  #shareText { display: none; } .shareBox { padding: 4px 10px; } .shareHead { margin-bottom: 0; }
+  .btns { gap: 6px; } .btns button.mid { font-size: 13px; padding: 9px 12px; } .btns button.big { font-size: 20px; padding: 8px 28px; }
+}
+@media (max-height: 760px) and (max-aspect-ratio: 4/5), (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  .btns { display: grid; grid-template-columns: 1fr 1fr; justify-items: stretch; }
+  .btns button.mid { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; padding-right: 8px; }
+  .btns #btnReplay, .btns #btnMenu { grid-column: 1 / -1; justify-self: center; }
+  #newBest { justify-self: center; }
+}
+@media (max-width: 360px) { .btns button.big { font-size: 19px; padding: 10px 22px; } .btns button.mid { font-size: 12px; } }
+/* fit pass 2: landscape sheet stays inside the screen, compact how-to card, 44 px end-card controls */
+#settings .panel > * { min-width: 0; }
+.btns button, .nameRow input { min-height: 44px; }
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) {
+  #settings .panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-width: 0; }
+  #settings .seg button { padding: 8px 8px; font-size: 13px; }
+  #tut .panel { min-width: 0; width: min(96vw, 620px); padding: 8px 16px; gap: 4px; }
+  #tutIcon { font-size: 26px; line-height: 1; margin: 0; } #tut h2 { font-size: 18px; margin: 0; } #tut p { margin: 0; font-size: 13px; line-height: 1.3; }
+  #tut .row { gap: 10px; } #tutNext { font-size: 18px; padding: 8px 26px; min-height: 44px; }
+}
+/* fit pass 4 (mansion): small landscape phones (iPhone SE 568×320) */
+@media (max-height: 520px) and (min-aspect-ratio: 1/1) and (max-width: 620px) {
+  #settings .panel { grid-template-areas: "h h" "km q" "l v" "w w" "s s"; row-gap: 6px; padding: 8px 14px; }
+  #settings .fSens { display: flex; align-items: center; gap: 10px; } #settings .fSens > label:first-child { flex: 1 1 auto; display: flex; flex-direction: row; align-items: center; gap: 8px; }
+  #settings .fSens > label:first-child span { white-space: nowrap; font-size: 13px; }
+}
+@media (max-height: 360px) {
+  #lockUI .panel { padding: 6px 14px; gap: 4px; } #lockUI h2 { font-size: 17px; margin: 0; }
+  .wheel { padding: 3px 4px; gap: 2px; } .wheel b { font-size: 26px; line-height: 1.15; } .wheels { gap: 10px; }
+  #lockUI .row, #lockUI .btns { gap: 10px; margin-top: 2px; }
+}

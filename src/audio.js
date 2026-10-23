@@ -188,7 +188,11 @@ export function duck(amount = 0.35, dur = 1.5) {
   musicBus.gain.linearRampToValueAtTime(full * amount, t + 0.08); musicBus.gain.setValueAtTime(full * amount, t + dur);
   musicBus.gain.linearRampToValueAtTime(full, t + dur + 1.2);
 }
-export function unlockAudio() { unlocked = true; const c = ac(); if (c) refreshMusic(); }
+// iOS Safari: resume inside the gesture, play a 1-sample silent buffer (unlocks output) and ask for 'playback' (ignores the mute switch)
+function kick(c) { try { const b = c.createBuffer(1, 1, 22050), src = c.createBufferSource(); src.buffer = b; src.connect(c.destination); src.start(0); } catch (e) {} }
+let kicked = false;
+export function unlockAudio() { unlocked = true; try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) {} const c = ac(); if (c) { if (!kicked) { kicked = true; kick(c); } if (c.state !== 'running') c.resume().catch(() => {}); refreshMusic(); } }
+export function audioState() { return ctx ? ctx.state : 'none'; }
 export function soundsReady() { const c = ac(); return c ? decodeAll(c) : Promise.resolve(0); }
 export function soundNames() { return Object.keys(buffers); }
 export function suspendAudio(h) { if (!ctx) return; if (h) ctx.suspend().catch(() => {}); else ctx.resume().catch(() => {}); }

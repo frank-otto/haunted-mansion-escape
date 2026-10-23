@@ -125,7 +125,21 @@ function applyQuality(qn, user = false) {
   buildWorld(); buildComposer(); resize();
   document.querySelectorAll('#qualSeg button').forEach(b => b.classList.toggle('on', b.dataset.q === qn));
 }
-function disposeGroup(g) { g.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+// free GPU memory of a rebuilt world: geometries, materials, their textures and shadow maps
+// (shared cached canvas textures are safe to dispose too: three.js re-uploads them from their canvas on next use)
+function disposeGroup(g) {
+  const seen = new Set();
+  g.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.isLight && o.dispose) o.dispose();
+    for (const m of (o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [])) {
+      if (seen.has(m)) continue; seen.add(m);
+      for (const k in m) { const v = m[k]; if (v && v.isTexture) v.dispose(); }
+      if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k] && m.uniforms[k].value; if (v && v.isTexture) v.dispose(); }
+      m.dispose();
+    }
+  });
+}
 let flybyGhost = null;
 function buildWorld() {
   if (rooms) for (const k in rooms) { scene.remove(rooms[k].group); disposeGroup(rooms[k].group); }
@@ -138,18 +152,19 @@ function buildWorld() {
   for (const k in rooms) { const fl = rooms[k].flash; if (fl && q.shadows) { fl.castShadow = true; fl.shadow.mapSize.set(1024, 1024); const c = fl.shadow.camera; c.left = c.bottom = -10; c.right = c.top = 10; c.near = 0.5; c.far = 40; fl.shadow.bias = -0.0006; fl.shadow.normalBias = 0.02; } }
   refreshClueTextures();
   buildColliders();
-  if (flybyGhost) scene.remove(flybyGhost);
+  if (flybyGhost) { scene.remove(flybyGhost); disposeGroup(flybyGhost); }
   flybyGhost = P.makeGhostFigure(S.kids, 0.8); flybyGhost.visible = false; scene.add(flybyGhost);
   setRoom(S.room, true);
   applyVisuals();
 }
+function swapMap(m, t) { if (m.map && m.map !== t) m.map.dispose(); m.map = t; }
 function refreshClueTextures() {
   if (!rooms) return;
   const L = getLang();
   const seq = variant('candles').map(i => TX.SYMBOLS[i]);
-  const lib = rooms.library; lib.bookPage.material.map = TX.flameBook(seq, T('bookT', null, L)); lib.bookPage.material.needsUpdate = true;
-  const k = rooms.kitchen; k.recipePage.material.map = TX.recipeSheet(variant('brew').map(i => BOTTLE_COLS[i]), T('recipeT', null, L), T('crystalT', null, L)); k.recipePage.material.needsUpdate = true;
-  const a = rooms.attic; a.sheetPage.material.map = TX.sheetMusic(variant('melody').map(i => [NOTE_COLS[i], PUZ.pitch[i]]), T('sheetT', null, L)); a.sheetPage.material.needsUpdate = true;
+  const lib = rooms.library; swapMap(lib.bookPage.material, TX.flameBook(seq, T('bookT', null, L))); lib.bookPage.material.needsUpdate = true;
+  const k = rooms.kitchen; swapMap(k.recipePage.material, TX.recipeSheet(variant('brew').map(i => BOTTLE_COLS[i]), T('recipeT', null, L), T('crystalT', null, L))); k.recipePage.material.needsUpdate = true;
+  const a = rooms.attic; swapMap(a.sheetPage.material, TX.sheetMusic(variant('melody').map(i => [NOTE_COLS[i], PUZ.pitch[i]]), T('sheetT', null, L))); a.sheetPage.material.needsUpdate = true;
 }
 function setRoom(name, snap = false) {
   S.room = name; R = rooms[name];
@@ -812,6 +827,7 @@ window.addEventListener('keyup', e => { keys.delete(e.code); });
 window.addEventListener('blur', () => keys.clear());
 window.addEventListener('keydown', e => {
   if (WALK.on) { keys.add(e.code); if (S.mode === 'play' && !S.tut && $('lockUI').classList.contains('hidden')) { if (e.code === 'KeyE' || e.code === 'Enter') { interactCross(); return; } if (/^Digit[1-5]$/.test(e.code)) { const it = S.inv[+e.code.slice(5) - 1]; if (it) select(S.sel === it ? null : it); return; } if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault(); } }
+  if (document.body.classList.contains('sheet')) { if (e.key === 'Escape') { e.preventDefault(); sheet(false); } return; }
   if (e.key === 'Escape') { if (!$('tut').classList.contains('hidden')) { tutClose(); return; } if (!$('lockUI').classList.contains('hidden')) { $('lockUI').classList.add('hidden'); return; } if (S.sel) { select(null); return; } if (S.spot) back(); else if (S.mode === 'play') pause(!S.paused); }
   if (S.mode !== 'play') return;
   if (!WALK.on) { if (e.key === 'ArrowLeft') cam.yaw -= 0.25; if (e.key === 'ArrowRight') cam.yaw += 0.25; } if (e.key === 'h' || e.key === 'H') askHint();
@@ -875,6 +891,7 @@ function resetState() {
   tweens.length = 0; cineCam = null; setCine(false); melodyPlaying = false; flyT = -1; if (flybyGhost) flybyGhost.visible = false;
 }
 function startGame(resume = false) {
+  if (document.body.classList.contains('sheet')) sheet(false);
   const sv = resume ? loadSave() : null;
   resetState();
   if (sv) { if (sv.kids !== S.kids) setKids(sv.kids); Object.assign(S, { time: sv.time, hintsUsed: sv.hintsUsed, hintLvl: sv.hintLvl || {}, inv: sv.inv || [], f: sv.f || {}, seq: sv.seq || [], brew: sv.brew || [], visited: sv.visited || {} }); S.log = Object.assign(S.log, sv.log || {}); }
@@ -885,7 +902,8 @@ function startGame(resume = false) {
   $('start').classList.add('hidden'); $('end').classList.add('hidden'); $('hud').classList.remove('hidden'); $('invBar').classList.remove('hidden');
   const room = sv ? sv.room : 'foyer'; setRoom(room, true); placePlayer(sv && sv.p ? [sv.p.x, sv.p.y, sv.p.z, sv.p.yaw] : null); snapCamera(); applyVisuals(); setWalkUI();
   A.unlockAudio(); A.setMood('main'); A.sfx.start();
-  navKey = ''; if (!store.get('hme-tut', 0) && !window.__hmeNoTut) after(1.4, tutOpen);
+  // the old blocking first-start tutorial is now a non-blocking in-play hint (first 2 games; ? still opens the full how-to)
+  navKey = ''; { const n = store.get('hme-hints', 0); if (n < 2 && !window.__hmeNoTut) { store.set('hme-hints', n + 1); after(3.2, showHint); } }
   if (!sv) { S.visited.foyer = 1; chapter('foyer'); after(1.0, () => say(T('intro'), 6)); after(2.2, () => lightning(true)); }
   else { S.visited[room] = 1; toast(T('resumed')); }
   save(); updateHud();
@@ -898,15 +916,17 @@ function tutList() { return WALK.on ? [['🚶', 'tutW1'], ['✨', 'tutW2'], ['�
 function tutRender() { const L = tutList(); const [ic, k0] = L[tutI]; const k = k0; $('tutIcon').textContent = ic; $('tutT').textContent = T(k + 't'); $('tutX').textContent = T(k + (WALK.on && document.body.classList.contains('touch') && (k === 'tutW1' || k === 'tutW2') ? 'm' : '')); $('tutStep').textContent = (tutI + 1) + '/' + L.length;
   $('tutDots').innerHTML = L.map((_, i) => `<i class="${i === tutI ? 'on' : ''}"></i>`).join(''); $('tutNext').textContent = tutI === L.length - 1 ? T('tutGo') : T('tutNext'); }
 function tutNext() { if (tutI < TUT.length - 1) { tutI++; tutRender(); A.sfx.ui(); } else tutClose(); }
+function showHint() { if (S.mode !== 'play') return; const h = $('hint'), tch = document.body.classList.contains('touch'); h.textContent = T(WALK.on ? (tch ? 'hintWalkT' : 'hintWalk') : (tch ? 'hintTouch' : 'hintKeys')); h.classList.add('show'); S.hintOn = true; clearTimeout(showHint._t); showHint._t = setTimeout(hideHint, 7000); }
+function hideHint() { clearTimeout(showHint._t); S.hintOn = false; $('hint').classList.remove('show'); }
 function tutClose() { S.tut = false; $('tut').classList.add('hidden'); store.set('hme-tut', 1); idleT = 0; }
 function toMenu() {
-  pause(false); S.mode = 'menu'; document.body.classList.remove('playing');
+  pause(false); hideHint(); S.mode = 'menu'; document.body.classList.remove('playing');
   $('hud').classList.add('hidden'); $('invBar').classList.add('hidden'); $('nav').classList.add('hidden'); $('end').classList.add('hidden'); $('start').classList.remove('hidden'); $('msg').classList.remove('show');
   resetState(); buildWorld(); setRoom('foyer', true); applyVisuals(); refreshStart();
 }
 function refreshStart() {
   const sv = loadSave(); $('btnContinue').classList.toggle('hidden', !sv); $('btnPlay').querySelector('span').textContent = sv ? T('newGame') : T('play');
-  $('btnPlay').classList.toggle('mid', !!sv); $('btnPlay').classList.toggle('big', !sv);
+  $('btnPlay').classList.toggle('mid', !!sv); $('btnPlay').classList.toggle('big', !sv); $('btnPlay').classList.toggle('play', !sv); $('btnContinue').classList.toggle('play', !!sv);
   if (sv) $('contInfo').textContent = `${T('r_' + sv.room)} · ${fmtTime(sv.time)}`; else $('contInfo').textContent = '';
   $('bestStart').textContent = S.best ? fmtTime(S.best.time) + ' ' + '⭐'.repeat(S.best.stars) : '—';
 }
@@ -941,7 +961,7 @@ function trackFps(now) {
   fps.n++; if (!fps.t0) fps.t0 = now;
   if (now - fps.t0 >= 1000) {
     const f = fps.n * 1000 / (now - fps.t0); fps.ema = fps.decided ? fps.ema * 0.6 + f * 0.4 : f; fps.n = 0; fps.t0 = now; fps.samples++; qualHint();
-    if (!fps.decided && fps.samples >= 3) { fps.decided = true; if (!S.qualityUser && !window.__hmeNoAutoQ) { const s = suggest(); if (s !== qName()) { applyQuality(s); applyVisuals(); toast(`${T('suggested')}: ${qLabel(s)} (${Math.round(fps.ema)} fps)`); } } }
+    if (!fps.decided && fps.samples >= 3) { fps.decided = true; if (!S.qualityUser && !window.__hmeNoAutoQ) { const s = suggest(); if (s !== qName()) { applyQuality(s); applyVisuals(); if (S.mode === 'play') toast(`${T('suggested')}: ${qLabel(s)} (${Math.round(fps.ema)} fps)`); } } }
     if (fps.decided && S.mode === 'play' && fps.ema < 24 && qName() !== 'low' && !window.__hmeNoAutoQ && !S.qualityUser) { fps.slow++; if (fps.slow >= 4) { fps.slow = 0; const order = ['low', 'mid', 'high', 'ultra']; const nq = order[Math.max(0, order.indexOf(qName()) - 1)]; applyQuality(nq); applyVisuals(); toast(`${T('fpsLow')} ${qLabel(nq)}`); } } else fps.slow = 0;
   }
 }
@@ -954,18 +974,19 @@ function refreshTexts() { if (S.tut) tutRender(); navKey = '';
   if (S.mode === 'end') updateShare();
 }
 function setKids(on) {
-  const ch = S.kids !== !!on; S.kids = !!on; store.set('hme-kids', S.kids); $('chkKids').checked = S.kids; $('chkKids2').checked = S.kids; A.setKids(S.kids);
+  const ch = S.kids !== !!on; S.kids = !!on; store.set('hme-kids', S.kids); $('chkKids').checked = S.kids; A.setKids(S.kids);
   document.body.classList.toggle('kids', S.kids); applyI18n(S.kids);
   if (ch && rooms && S.mode === 'menu') { buildWorld(); }
 }
 function wire() {
   $('btnPlay').onclick = () => startGame(false);
   $('btnContinue').onclick = () => startGame(true);
-  $('chkKids').onchange = e => setKids(e.target.checked); $('chkKids2').onchange = e => setKids(e.target.checked);
+  $('chkKids').onchange = e => setKids(e.target.checked);
   document.querySelectorAll('#langSeg button, #langSeg2 button').forEach(b => b.onclick = () => { setLang(b.dataset.lang); S.shareLang = getLang(); refreshTexts(); A.sfx.ui(); });
-  $('btnSettings').onclick = () => { $('settings').classList.remove('hidden'); qualHint(); };
-  $('btnSet2').onclick = () => { $('settings').classList.remove('hidden'); qualHint(); };
-  $('btnCloseSettings').onclick = () => $('settings').classList.add('hidden');
+  $('btnSettings').onclick = () => { sheet(true); A.sfx.ui(); };
+  $('btnSet2').onclick = () => sheet(true);
+  $('btnCloseSettings').onclick = () => sheet(false); $('btnSetX').onclick = () => sheet(false);
+  $('settings').onclick = e => { if (e.target.id === 'settings') sheet(false); };
   document.querySelectorAll('#qualSeg button').forEach(b => b.onclick = () => { applyQuality(b.dataset.q, true); applyVisuals(); A.sfx.ui(); qualHint(); });
   $('volMusic').oninput = e => { A.setMusicVolume(e.target.value / 100); store.set('hme-music', +e.target.value); };
   $('volSfx').oninput = e => { A.setSfxVolume(e.target.value / 100); store.set('hme-sfx', +e.target.value); };
@@ -999,8 +1020,9 @@ function wire() {
 }
 
 // ---------------- boot ----------------
-setLang(getLang()); A.setKids(S.kids); document.body.classList.toggle('kids', S.kids);
-$('chkKids').checked = S.kids; $('chkKids2').checked = S.kids;
+setLang(getLang(), false); A.setKids(S.kids); document.body.classList.toggle('kids', S.kids);
+$('chkKids').checked = S.kids;
+function sheet(on) { $('settings').classList.toggle('hidden', !on); $('btnSettings').setAttribute('aria-expanded', on ? 'true' : 'false'); document.body.classList.toggle('sheet', !!on); if (on) qualHint(); }
 wire(); buildWorld(); buildComposer(); resize(); refreshTexts();
 setRoom('foyer', true); applyVisuals();
 document.querySelectorAll('#qualSeg button').forEach(b => b.classList.toggle('on', b.dataset.q === qName()));
@@ -1010,6 +1032,7 @@ requestAnimationFrame(frame);
 
 // ---------------- test hooks ----------------
 window.__hme = {
+  audioState: () => A.audioState(), geo: () => ({ ...renderer.info.memory }), sheet: on => sheet(on), playHint: () => ({ on: !!S.hintOn, text: $('hint').textContent }),
   S, PUZ, cam, get R() { return R; }, get rooms() { return rooms; }, camera, renderer,
   start: (resume) => startGame(!!resume), menu: toMenu, interact, act: interact, hint: askHint, goal, select, give, gotoRoom, back,
   lockSet: (code) => { openLock(); S.lockDigits = code.split('').map(Number); renderLock(); return lockTry(); },

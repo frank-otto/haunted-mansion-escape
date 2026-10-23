@@ -18,14 +18,14 @@ const STR = {
     ctxUse: 'Use {x} on {y}?', ctxIdle: 'Psst… try the glowing {x} ✨', wrongUse: "That doesn't work here.", deselect: 'Put back',
     navLocked: 'locked', navTo: '{x}', n_foyer: 'Foyer', n_library: 'Library', n_kitchen: 'Kitchen', n_attic: 'Attic',
     kicker: 'A Halloween escape room', tag: 'Find keys, light candles, open secret doors — and get out before midnight.',
-    play: 'ENTER THE MANSION', cont: 'CONTINUE', newGame: 'New game', how: '🖱️ Click / tap objects &nbsp;·&nbsp; ✋ Drag to look around &nbsp;·&nbsp; 🎒 Select an item, then click where to use it &nbsp;·&nbsp; 💀 Stuck? Ask for a hint',
+    play: 'PLAY', cont: 'CONTINUE', hintTouch: 'Tap glowing ✨ things · swipe to look around · 🎒 bag below · 💀 = hint · ? = how to play', hintKeys: 'Click glowing ✨ things · drag to look around · 🎒 bag below · 💀 = hint · ? = how to play', hintWalk: 'WASD walk · mouse looks · E uses ✨ things · 💀 = hint · ? = how to play', hintWalkT: 'Left stick walks · swipe to look · ✋ uses ✨ things · 💀 = hint · ? = how to play', newGame: 'New game', how: '🖱️ Click / tap objects &nbsp;·&nbsp; ✋ Drag to look around &nbsp;·&nbsp; 🎒 Select an item, then click where to use it &nbsp;·&nbsp; 💀 Stuck? Ask for a hint',
     howKids: '👆 Tap things to explore &nbsp;·&nbsp; ✋ Drag to look around &nbsp;·&nbsp; 🎒 Items are used by themselves &nbsp;·&nbsp; 👻 The friendly ghost helps you',
-    kids: 'Kids mode', settings: '⚙ Settings', best: 'Best', settingsT: 'Settings', quality: 'Quality', q_low: 'Low', q_mid: 'Medium', q_high: 'High', q_ultra: 'Ultra',
-    music: 'Music', sfx: 'Sound effects', mute: 'Mute all', close: 'Done', paused: 'Paused', resume: 'RESUME', quit: 'Main menu', lang: 'Language',
+    kids: 'Kids mode', settings: '⚙ Modes & options', best: 'Best', settingsT: 'Modes & options', quality: 'Quality', q_low: 'Low', q_mid: 'Medium', q_high: 'High', q_ultra: 'Ultra',
+    music: 'Music', sfx: 'Sound effects', mute: 'Sound off', close: 'Done', paused: 'Paused', resume: 'RESUME', quit: 'Main menu', lang: 'Language',
     time: 'Time', hints: 'Hints', hint: 'Hint', bag: 'Bag', back: 'Back', enter: 'OK', clear: 'Clear',
     suggested: 'Suggested for this device', fpsLow: 'Running slow – switched quality to', saved: 'Progress saved', resumed: 'Welcome back! Progress restored.',
     endTitle: 'YOU ESCAPED!', newBest: 'NEW BEST TIME!', name: 'Name', stTime: 'escape time', stHints: 'hints used', stStars: 'stars', stRooms: 'rooms',
-    shareT: 'Share text', share: 'Copy share text', shot: 'Download end card', replay: 'PLAY AGAIN', copied: 'Copied! Paste it on X 👻', copyFail: 'Copy failed – select the text manually', shotSaved: 'End card saved 📸',
+    shareT: 'Share text', share: 'Copy text', shot: 'Save end card', replay: 'PLAY AGAIN', copied: 'Copied! Paste it on X 👻', copyFail: 'Copy failed – select the text manually', shotSaved: 'End card saved 📸',
     r_foyer: 'THE GRAND FOYER', r_library: 'THE FORBIDDEN LIBRARY', r_kitchen: "THE WITCH'S KITCHEN", r_attic: 'THE ATTIC', r_garden: 'FREEDOM',
     c_foyer: 'CHAPTER I', c_library: 'CHAPTER II', c_kitchen: 'CHAPTER III', c_attic: 'FINALE', c_garden: 'EPILOGUE',
     // labels
@@ -95,14 +95,14 @@ const STR = {
     ctxUse: '{x} benutzen mit {y}?', ctxIdle: 'Psst… probier mal: {x} ✨', wrongUse: 'Das funktioniert hier nicht.', deselect: 'Zurücklegen',
     navLocked: 'verschlossen', navTo: '{x}', n_foyer: 'Foyer', n_library: 'Bibliothek', n_kitchen: 'Küche', n_attic: 'Dachboden',
     kicker: 'Ein Halloween-Escape-Room', tag: 'Finde Schlüssel, entzünde Kerzen, öffne Geheimtüren — und entkomme vor Mitternacht.',
-    play: 'VILLA BETRETEN', cont: 'WEITERSPIELEN', newGame: 'Neues Spiel', how: '🖱️ Objekte anklicken / antippen &nbsp;·&nbsp; ✋ Ziehen zum Umsehen &nbsp;·&nbsp; 🎒 Gegenstand wählen, dann anklicken, wo er hin soll &nbsp;·&nbsp; 💀 Feststeckt? Tipp holen',
+    play: 'SPIELEN', cont: 'WEITERSPIELEN', hintTouch: 'Leuchtendes ✨ antippen · wischen zum Umsehen · 🎒 Tasche unten · 💀 = Tipp · ? = So geht’s', hintKeys: 'Leuchtendes ✨ anklicken · ziehen zum Umsehen · 🎒 Tasche unten · 💀 = Tipp · ? = So geht’s', hintWalk: 'WASD laufen · Maus schaut · E benutzt ✨ · 💀 = Tipp · ? = So geht’s', hintWalkT: 'Linker Stick läuft · wischen zum Umsehen · ✋ benutzt ✨ · 💀 = Tipp · ? = So geht’s', newGame: 'Neues Spiel', how: '🖱️ Objekte anklicken / antippen &nbsp;·&nbsp; ✋ Ziehen zum Umsehen &nbsp;·&nbsp; 🎒 Gegenstand wählen, dann anklicken, wo er hin soll &nbsp;·&nbsp; 💀 Feststeckt? Tipp holen',
     howKids: '👆 Tippe Dinge an &nbsp;·&nbsp; ✋ Ziehen zum Umsehen &nbsp;·&nbsp; 🎒 Gegenstände werden automatisch benutzt &nbsp;·&nbsp; 👻 Das liebe Gespenst hilft dir',
-    kids: 'Kinder-Modus', settings: '⚙ Einstellungen', best: 'Rekord', settingsT: 'Einstellungen', quality: 'Qualität', q_low: 'Niedrig', q_mid: 'Mittel', q_high: 'Hoch', q_ultra: 'Ultra',
-    music: 'Musik', sfx: 'Effekte', mute: 'Alles stumm', close: 'Fertig', paused: 'Pause', resume: 'WEITER', quit: 'Hauptmenü', lang: 'Sprache',
+    kids: 'Kinder-Modus', settings: '⚙ Modi & Optionen', best: 'Rekord', settingsT: 'Modi & Optionen', quality: 'Qualität', q_low: 'Niedrig', q_mid: 'Mittel', q_high: 'Hoch', q_ultra: 'Ultra',
+    music: 'Musik', sfx: 'Effekte', mute: 'Ton aus', close: 'Fertig', paused: 'Pause', resume: 'WEITER', quit: 'Hauptmenü', lang: 'Sprache',
     time: 'Zeit', hints: 'Tipps', hint: 'Tipp', bag: 'Tasche', back: 'Zurück', enter: 'OK', clear: 'Löschen',
     suggested: 'Empfohlen für dieses Gerät', fpsLow: 'Läuft langsam – Qualität umgestellt auf', saved: 'Spielstand gespeichert', resumed: 'Willkommen zurück! Spielstand geladen.',
     endTitle: 'ENTKOMMEN!', newBest: 'NEUE BESTZEIT!', name: 'Name', stTime: 'Fluchtzeit', stHints: 'Tipps', stStars: 'Sterne', stRooms: 'Räume',
-    shareT: 'Teil-Text', share: 'Teil-Text kopieren', shot: 'Endkarte laden', replay: 'NOCHMAL SPIELEN', copied: 'Kopiert! Jetzt auf X einfügen 👻', copyFail: 'Kopieren fehlgeschlagen – Text bitte markieren', shotSaved: 'Endkarte gespeichert 📸',
+    shareT: 'Teil-Text', share: 'Text kopieren', shot: 'Endkarte', replay: 'NOCHMAL SPIELEN', copied: 'Kopiert! Jetzt auf X einfügen 👻', copyFail: 'Kopieren fehlgeschlagen – Text bitte markieren', shotSaved: 'Endkarte gespeichert 📸',
     r_foyer: 'DIE GROSSE EINGANGSHALLE', r_library: 'DIE VERBOTENE BIBLIOTHEK', r_kitchen: 'DIE HEXENKÜCHE', r_attic: 'DER DACHBODEN', r_garden: 'FREIHEIT',
     c_foyer: 'KAPITEL I', c_library: 'KAPITEL II', c_kitchen: 'KAPITEL III', c_attic: 'FINALE', c_garden: 'EPILOG',
     l_drawer: 'Klappernde Schublade', l_candleItem: 'Ersatzkerze', l_clock: 'Standuhr', l_portraitLord: 'Lord Ashgrave', l_portraitLady: 'Lady Ashgrave', l_portraitCat: 'Sir Schnurrbart', l_portraitShip: 'Die Schwarze Möwe',
@@ -151,10 +151,12 @@ const STR = {
     bookT: ['Die Ordnung der Flammen', 'so entzünde sie'], recipeT: ['Mondlicht-Elixier', 'in dieser Reihenfolge'], crystalT: 'Mondkristall', sheetT: 'Wisps Schlaflied'
   }
 };
-let lang = 'en';
+// auto language: a saved choice wins, otherwise DE for de* browsers, EN for everything else
+export function autoLang() { try { const l = (navigator.languages && navigator.languages[0]) || navigator.language || ''; return /^de\b/i.test(l) ? 'de' : 'en'; } catch (e) { return 'en'; } }
+let lang = autoLang();
 try { const l = localStorage.getItem('hme-lang'); if (l === 'de' || l === 'en') lang = l; } catch (e) {}
 export function getLang() { return lang; }
-export function setLang(l) { lang = l === 'de' ? 'de' : 'en'; try { localStorage.setItem('hme-lang', lang); } catch (e) {} document.documentElement.lang = lang; }
+export function setLang(l, save = true) { lang = l === 'de' ? 'de' : 'en'; if (save) try { localStorage.setItem('hme-lang', lang); } catch (e) {} document.documentElement.lang = lang; }
 export function T(k, vars, l = lang) { let s = (STR[l] && STR[l][k]) ?? STR.en[k] ?? k; if (vars && typeof s === 'string') for (const v of Object.keys(vars)) s = s.replace('{' + v + '}', vars[v]); return s; }
 export function applyI18n(kids) {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
